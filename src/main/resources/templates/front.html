@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="front.css">
+        <title>CodeTalk</title>
+        <script>
+            function route(num){
+                if(num == 1)
+                window.location.href = '/signup'
+                if(num == 2)
+                window.location.href = '/login'
+            }
+        </script>
+    </head>
+    <body>
+        <img src="front.jpeg" id="front">
+        <div id="menubar">
+            <button id="about">About</button>
+            <button id="login" onclick="route(2)">Login</button>
+            <button id="signup" onclick="route(1)">Signup</button>
+        </div>
+        <div id="title">CodeTalk</div>
+        <div id="desc">A code sharing and discussion platform</div>
+    </body>
+</html>

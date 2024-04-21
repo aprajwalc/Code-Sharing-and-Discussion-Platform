@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discussion</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="discussion.css">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    <script th:inline="javascript">
+        const userid = /*[[${userid}]]*/ 'Default message';
+        console.log(userid)
+        const gids = /*[[${gids}]]*/ 'null'
+        var gid = /*[[${gid}]]*/ null;
+        var groupname = /*[[${groupname}]]*/ null;
+    </script>
+    <script>
+        var oldgid = 0;
+        var usermapping;
+        var socket = new SockJS('http://10.5.26.6:8080/ws');
+        var stompClient = Stomp.over(socket);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            //var socket = new SockJS('http://IP:8080/ws')
+            stompClient.connect({}, function (frame) {
+                // console.log('Connected: ' + frame);
+                gids.forEach(id => {
+                    var topic = '/topics/discussion/'+String(id);
+                    stompClient.subscribe(topic, function (notification) {
+                        showMessage(notification.body, id);
+                    });
+                });
+            });
+            
+            function showMessage(message, id) {
+                if(Number(id) === Number(gid)){
+                    const chatWindow = document.getElementById("chat-window");
+                    fetch("/api/getLastMessage", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: Number(gid)
+                    })
+                    .then(response => response.json())
+                    .then(discussion => {
+                        if(discussion){
+                            var messageContainer = document.createElement("div");
+                            if(discussion.userid === userid)
+                                messageContainer.style = "position: relative; left: 40%; width: 59%; background-color: white; color: black; word-wrap: break-word; font-family: cursive;";
+                            else
+                                messageContainer.style = "position: relative; left: 1%; width: 59%; background-color: white; color: black; word-wrap: break-word; font-family: cursive;";
+                            messageContainer.classList.add('message')
+
+                            var usernameSpan = document.createElement("span");
+                            usernameSpan.textContent = usermapping[discussion.userid]
+                            usernameSpan.style = "position: relative; margin-left: 10px; color: black; font-size: 14px;";
+
+                            var messageDiv = document.createElement("div");
+
+                            if (discussion.message.startsWith("~$codefile{")) {
+                                var regex = /~\$codefile{(\d+)}{(\d+)}{([^}]*)}/;
+                                var match = discussion.message.match(regex);
+
+                                fid = match[1];
+                                uid = match[2];
+                                messageDiv.textContent = match[3];
+                                messageDiv.style = "padding: 10px; height: 50px;";
+
+                                messageContainer.onclick = function(event) {
+                                    readonly(event, Number(fid), Number(uid));
+                                };
+                            } else {
+                                messageDiv.textContent = discussion.message;
+                                messageDiv.style = "padding: 10px;";
+                            }
+
+                            var timeSpan = document.createElement("div");
+                            var date = new Date(discussion.time)
+                            timeSpan.textContent = date.toLocaleString()
+                            timeSpan.style = "color: black; font-size: 12px; position: relative; bottom: 5px; margin-top: 5px; width: calc(100% - 10px); text-align: right; right: 10px;";
+
+                            messageContainer.appendChild(usernameSpan);
+                            messageContainer.appendChild(messageDiv);
+                            messageContainer.appendChild(timeSpan);
+
+                            chatWindow.appendChild(messageContainer);
+                            chatWindow.scrollTop = chatWindow.scrollHeight;
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+                else{
+                    console.log('Message from server:', message, " from ", id);
+                    var div = document.getElementById('group-list')
+                    var child = document.querySelector(`.group-list-item[gid="${id}"]`)
+                    var unread = child.querySelector('.unread');
+                    console.log(unread.style.visibility)
+                    if(!unread.style.visibility || unread.style.visibility === 'visible'){
+                        var value = parseInt(unread.innerText);
+                        value++;
+                        unread.innerText = value;
+                    }
+                    else{
+                        unread.innerText = 1;
+                        unread.style.visibility = 'visible';
+                    }
+                    div.insertBefore(child, div.firstChild);
+                }
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const resizable = function (resizer) {
+                const direction = resizer.getAttribute('data-direction') || 'horizontal';
+                const prevSibling = resizer.previousElementSibling;
+                const nextSibling = resizer.nextElementSibling;
+                let x = 0;
+                let y = 0;
+                let prevSiblingHeight = 0;
+                let prevSiblingWidth = 0;
+
+                const mouseDownHandler = function (e) {
+                    x = e.clientX;
+                    y = e.clientY;
+                    const rect = prevSibling.getBoundingClientRect();
+                    prevSiblingHeight = rect.height;
+                    prevSiblingWidth = rect.width;
+
+                    document.addEventListener('mousemove', mouseMoveHandler);
+                    document.addEventListener('mouseup', mouseUpHandler);
+                };
+
+                const mouseMoveHandler = function (e) {
+                    const dx = e.clientX - x;
+                    const dy = e.clientY - y;
+
+                    switch (direction) {
+                        case 'vertical':
+                            const h =
+                                ((prevSiblingHeight + dy) * 100) /
+                                resizer.parentNode.getBoundingClientRect().height;
+                            prevSibling.style.height = h + '%';
+                            break;
+                        case 'horizontal':
+                        default:
+                            const w =
+                                ((prevSiblingWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+                            prevSibling.style.width = w + '%';
+                            break;
+                    }
+
+                    const cursor = direction === 'horizontal' ? 'col-resize' : 'row-resize';
+                    resizer.style.cursor = cursor;
+                    document.body.style.cursor = cursor;
+
+                    prevSibling.style.groupSelect = 'none';
+                    prevSibling.style.pointerEvents = 'none';
+
+                    nextSibling.style.groupSelect = 'none';
+                    nextSibling.style.pointerEvents = 'none';
+                };
+
+                const mouseUpHandler = function () {
+                    resizer.style.removeProperty('cursor');
+                    document.body.style.removeProperty('cursor');
+
+                    prevSibling.style.removeProperty('group-select');
+                    prevSibling.style.removeProperty('pointer-events');
+
+                    nextSibling.style.removeProperty('group-select');
+                    nextSibling.style.removeProperty('pointer-events');
+
+                    document.removeEventListener('mousemove', mouseMoveHandler);
+                    document.removeEventListener('mouseup', mouseUpHandler);
+                };
+
+                    resizer.addEventListener('mousedown', mouseDownHandler);
+                };
+
+            document.querySelectorAll('.resizer').forEach(function (ele) {
+                resizable(ele);
+            });
+        });
+
+        function storeLastSeen(event, value){
+            event.preventDefault();
+            if(Number(gid) !== 0){
+                fetch("/api/storeLastSeen", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({gid: Number(gid), userid: Number(userid)}),
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if(value === 1)
+                    window.location.href = '/home'
+                })
+                .catch(error => console.error('Error:', error));
+            }
+            else{
+                window.location.href = '/home'
+            }
+        }
+
+        function openAddModal(groupName) {
+            const modalTitle = document.getElementById("AddMemberModalTitle");
+            modalTitle.textContent = `Add members to ${groupName}`;
+        }
+
+        function openGroupModal(groupname, gid){
+            const modalTitle = document.getElementById("groupModalTitle");
+            modalTitle.textContent = `${groupname}`;
+            fetch("/api/getGroupInfo", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: Number(gid)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data){
+                        var gdesc = document.getElementById("gdesc")
+                        var mdesc = document.getElementById("memdesc")
+                        mdesc.value = ""
+                        for (let index = 0; index < data.length; index++) {
+                            if(index === 0)
+                            gdesc.value = data[index]
+                            else
+                            mdesc.value = mdesc.value + data[index]
+                        }
+                    }
+                    else{
+                        alert("Failed to fetch")
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function readonly(event, fid, uid){
+            event.preventDefault();
+            storeLastSeen(event, 2)
+            console.log(fid)
+            if(uid === userid){
+                fetch("/api/enterFile", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: String(fid),
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if(data === 'Success'){
+                        // window.location.href = "/editor";
+                    }
+                    else if(data === 'Notpresent'){
+                        alert("The file has been deleted")
+                    }
+                    else{
+                        alert("Failed to open folder")
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+            else{
+                fetch("/api/interEditorReadonly", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: Number(fid),
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if(data === 'Success'){
+                        window.location.href = "/editoreadonly";
+                    }
+                    else if(data === 'Notpresent'){
+                        alert("The file has been deleted by the user who sent it")
+                    }
+                    else{
+                        alert("Failed to open folder")
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        function selectgroup(event, groupName, id) {
+            // event.preventDefault()
+            console.log('Selected group:', groupName);
+            const div = document.getElementById('right1');
+            div.style.display = 'block';
+            oldgid = gid;
+            gid = id;
+
+            const groups = document.querySelectorAll('.group-list-item');
+            groups.forEach(group => group.classList.remove('active'));
+
+            const selectedGroup = document.querySelector(`.group-list-item[data-group-name="${groupName}"]`);
+            if (selectedGroup) {
+                selectedGroup.classList.add('active');
+                selectedGroup.querySelector('.unread').style.visibility = 'hidden';
+            }
+
+            const chatWindow = document.getElementById("chat-window");
+            document.getElementById("chat-window").innerHTML = "";
+
+            fetch("/api/sendUserMappings", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: Number(gid),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data){
+                    usermapping = data;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+            fetch("/api/getDiscussions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: Number(gid),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data){
+                        data.forEach(discussion => {
+                            var messageContainer = document.createElement("div");
+                            if(discussion.userid === userid)
+                                messageContainer.style = "position: relative; left: 40%; width: 59%; background-color: white; color: black; word-wrap: break-word; font-family: cursive;";
+                            else
+                                messageContainer.style = "position: relative; left: 1%; width: 59%; background-color: white; color: black; word-wrap: break-word; font-family: cursive;";
+                            messageContainer.classList.add('message')
+
+                            var usernameSpan = document.createElement("span");
+                            usernameSpan.textContent = usermapping[discussion.userid]
+                            usernameSpan.style = "position: relative; margin-left: 10px; color: black; font-size: 14px;";
+
+                            var messageDiv = document.createElement("div");
+
+                            if (discussion.message.startsWith("~$codefile{")) {
+                                var regex = /~\$codefile{(\d+)}{(\d+)}{([^}]*)}/;
+                                var match = discussion.message.match(regex);
+
+                                fid = match[1];
+                                uid = match[2];
+                                console.log(fid);
+                                messageDiv.textContent = match[3];
+                                messageDiv.style = "padding: 10px; height: 50px;";
+
+                                (function(fid, uid) {
+                                    messageContainer.onclick = function(event) {
+                                        readonly(event, Number(fid), Number(uid));
+                                    };
+                                })(fid, uid);
+                            } else {
+                                messageDiv.textContent = discussion.message;
+                                messageDiv.style = "padding: 10px;";
+                            }
+
+                            var timeSpan = document.createElement("div");
+                            var date = new Date(discussion.time)
+                            timeSpan.textContent = date.toLocaleString()
+                            timeSpan.style = "color: black; font-size: 12px; position: relative; bottom: 5px; margin-top: 5px; width: calc(100% - 10px); text-align: right; right: 10px;";
+
+                            messageContainer.appendChild(usernameSpan);
+                            messageContainer.appendChild(messageDiv);
+                            messageContainer.appendChild(timeSpan);
+
+                            chatWindow.appendChild(messageContainer);
+                            chatWindow.scrollTop = chatWindow.scrollHeight;
+                        });
+                        document.getElementById("groupname").innerHTML = `<div id='nameofgroup' data-toggle="modal" data-target="#groupModal" onclick="openGroupModal('${groupName}', '${gid}')">${groupName}</div> <button id="add" data-toggle="modal" data-target="#addModal" onclick="openAddModal('${groupName}')"><img src="add-user.png" id="addimage"/></button>`;
+                    }
+                    else{
+                        alert("Failed to open group");
+                    }
+                })
+            .catch(error => console.error('Error:', error));
+
+            if(Number(oldgid) !== 0){
+                fetch("/api/storeLastSeen", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({gid: Number(oldgid), userid: Number(userid)}),
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log("Done");
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        function sendtoserver(message){
+            fetch("/api/storeMessage", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({gid: gid, message: message})
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if(data === "Success"){
+                        var topic = "/topics/discussion/"+gid;
+                        stompClient.send(topic, {}, JSON.stringify({ content: 'Hello, world!' }))
+                    }
+                    if(data !== 'Success'){
+                        alert("Failed to store message")
+                    }
+                })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            console.log(gid);
+            const messageInput = document.getElementById("message-input");
+            const message = messageInput.value.trim();
+            if (message !== "") {
+                var div = document.getElementById('group-list')
+                div.insertBefore(document.querySelector('.active'), div.firstChild);
+                messageInput.value = "";
+                sendtoserver(message);
+            }
+        }
+
+        function sendcodefile(event, name, id){
+            event.preventDefault();
+            const messageInput = document.getElementById("message-input");
+            messageInput.value = "";
+
+            var message = `~$codefile{${id}}{${userid}}{${name}}`
+            sendtoserver(message);
+            toggleDiv();
+        }
+
+        function getTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const meridiem = hours >= 12 ? 'PM' : 'AM';
+
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes} ${meridiem}`;
+        }
+
+        function addmember(event){
+            event.preventDefault();
+            var input = document.getElementById('inputhi1').value;
+            console.log(input);
+            fetch("/api/checkUser", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: String(input)
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data)
+                    if(data !== 'Fail'){
+                        fetch("/api/addMember", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({userid: Number(data), gid: gid})
+                            })
+                            .then(response => response.text())
+                            .then(data => {
+                                if(data === 'Success'){
+                                    alert('Member added Successfully')
+                                    window.location.href = '/discussion'
+                                }
+                                else{
+                                    alert("Failed to add Member")
+                                }
+                            })
+                        .catch(error => console.error('Error:', error));
+                    }
+                    else{
+                        alert("User of entered username does not exist")
+                    }
+                })
+            .catch(error => console.error('Error:', error));
+            }
+    </script>
+</head>
+<body>
+    <div id="menubar">
+		<button class="menubutton" onclick="storeLastSeen(event, 1);"><img class="menuimage" src="home.png" draggable="false"/></button>
+		<button class="menubutton"><img class="menuimage" src="split.png" draggable="false"/></button>
+	</div>
+    <div class="container">
+        <div class="container__left">
+            <div id="search">
+                <input type="text" id="searchbar" placeholder="Search the group...."/>
+            </div>
+            <div class="group-list" id="group-list" th:if="${groups != 'empty'}" th:each="groupwrap : ${groups}">
+                <div class="group-list-item" th:data-group-name="${groupwrap.group.name}" th:gid="${groupwrap.group.gid}" onclick="selectgroup(event, this.getAttribute('data-group-name'), this.getAttribute('gid'));">
+                    <div class="name" th:text="${groupwrap.group.name}"></div>
+                    <div class="unread" th:if="${groupwrap.notification == 0}" style="visibility: hidden;" th:text="${groupwrap.notification}"></div>
+                    <div class="unread" th:if="${groupwrap.notification != 0}" th:text="${groupwrap.notification}"></div>
+                </div>
+            </div>
+        </div>
+        <div class="resizer" data-direction="horizontal"></div>
+        <div class="container__right">
+            <div id="right1">
+                <button id="toggle" onclick="toggleDiv(event)">
+                    <img src="add.png" id="addattach" draggable="false"/>
+                </button>
+                <div id="popup">
+                    <div id="file" th:if="${files!='empty'}" th:each="file : ${files}" th:text="${file.name}" th:fid="${file.id}" th:fname="${file.name}" onclick="sendcodefile(event, this.getAttribute('fname'), this.getAttribute('fid'));"></div>
+                </div>
+                <div id="groupname"><h2>Select a group to start chatting</h2></div>
+                <div class="chat-window" id="chat-window">
+                </div>
+                <form onsubmit="sendMessage(event)">
+                    <input type="text" id="message-input" pattern="^(?!~).*" title="Message cannot start with '~'" placeholder="Type your message..." autocomplete="off" autofocus="true"></input>
+                </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <div class="modal-title" id="AddMemberModalTitle"></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                    <input id="inputhi1" class="inputh2" placeholder="Member name" autocomplete="off" required></input>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="buttonhi1" onclick="addmember(event)">Add Member</button>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="modal fade" id="groupModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <div class="modal-title" id="groupModalTitle"></div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <textarea id="gdesc" class="inputh2" name="forf2" placeholder="Description" required autocomplete="off"></textarea>
+                    <textarea id="memdesc" class="inputh2" name="forf2" placeholder="Members" required autocomplete="off"></textarea>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <script>    
+        const searchInput = document.getElementById('searchbar');
+        const groupItems = document.querySelectorAll('.group-list-item');
+    
+        searchInput.addEventListener('input', function() {
+            const searchText = this.value.trim();
+            groupItems.forEach(item => {
+                const itemText = item.textContent.trim();
+                if (searchText === '' || itemText.includes(searchText)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        function toggleDiv() {
+            event.preventDefault();
+            var popup = document.getElementById('popup');
+            popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+        }
+
+        if(Number(gid) !== 0){
+            selectgroup(event, groupname, gid);
+        }
+    </script>
+</body>
+</html>

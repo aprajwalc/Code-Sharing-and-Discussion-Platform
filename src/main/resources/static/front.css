@@ -1,0 +1,121 @@
+body{
+    background-color: black;
+}
+
+#front{
+    position: absolute;
+    height: 80%;
+    top: 15%;
+    left: 60%;
+}
+
+#title{
+    position: absolute;
+    font-size: 180px;
+    top: 20%;
+    color: #bed7dc;
+    font-family: cursive;
+    animation-name: moves1;
+    animation-fill-mode: forwards;
+    animation-timing-function: linear;
+    animation-duration: 1s;
+}
+
+@keyframes moves1{
+    from {left: 0%;}
+    to {left: 5.5%;}
+}
+
+#menubar{
+    position: absolute;
+    background-color: #202c37;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 10%;
+    border-radius: 5px;
+}
+
+#about{
+    position: relative;
+    background-color: #c7dfb8;
+    color: #382047;
+    left: 87%;
+    width: 10%;
+    height: 70%;
+    font-family: cursive;
+    font-size: 25px;
+    border: 2px solid black;
+    border-radius: 5px;
+    margin-top: 0.7%;
+}
+
+#signup{
+    position: relative;
+    background-color: #c7dfb8;
+    color: #382047;
+    left: 56%;
+    width: 10%;
+    height: 70%;
+    font-family: cursive;
+    font-size: 25px;
+    border: 2px solid black;
+    border-radius: 5px;
+    margin-top: 0.7%;
+}
+
+#about:hover{
+    background-color: black;
+    color: #bed7dc;
+    transition: 1s;
+}
+
+#signup:hover{
+    background-color: black;
+    color: #bed7dc;
+    transition: 1s;
+}
+
+#desc{
+    position: absolute;
+    color: #bed7dc;
+    font-family: cursive;
+    font-size: 40px;
+    top: 52%;
+    /* left: 8%; */
+    animation-name: moves2;
+    animation-fill-mode: forwards;
+    animation-timing-function: linear;
+    animation-duration: 1s;
+}
+
+@keyframes moves2{
+    from {left: 13%;}
+    to {left: 7%;}
+}
+
+#login{
+    position: relative;
+    background-color: #c7dfb8;
+    color: #382047;
+    left: 56%;
+    width: 10%;
+    height: 70%;
+    font-family: cursive;
+    font-size: 25px;
+    border: 2px solid black;
+    border-radius: 5px;
+    margin-top: 0.7%;
+}
+
+#login:hover{
+    background-color: black;
+    color: #bed7dc;
+    border: 2px solid #bed7dc;
+    transition: 1s;
+}
+
+@keyframes moves3{
+    from {left: 16%;}
+    to {left: 8%;}
+}

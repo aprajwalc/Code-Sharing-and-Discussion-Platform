@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="signup.css">
+        <script>
+            function sendUserInfo(event){
+                event.preventDefault();
+                var username = document.getElementById("username").value;
+                var email = document.getElementById("email").value;
+                var password = document.getElementById("password").value;
+                var cpassword = document.getElementById("cpassword").value;
+                if(password === cpassword){
+                    fetch("/api/sendUserInfo", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ username: username, email: email, password: password }),
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        alert("User registered successfully");
+                        window.location.href = '/security';
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+                else{
+                    alert("Password and Confirm Password must be same");
+                }
+            }
+        </script>
+    </head>
+    <title>Sign up</title>
+    <body>
+        <div id="signup">
+            <div id="image">
+                <img src="coffee.png" id="img1">
+            </div>
+            <div id="main">
+                <p id="name">CodeTalk</p>
+                <form onsubmit="sendUserInfo(event)">
+                    <input id="username" placeholder="Username" required autocomplete="off"/>
+                    <input id="email" type="email" placeholder="Email" required autocomplete="off"/>
+                    <input id="password" type="password" placeholder="Password" required/>
+                    <input id="cpassword" type="password" placeholder="Confirm Password" required/>
+                    <button id="signin">Save</button>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

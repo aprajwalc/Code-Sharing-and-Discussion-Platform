@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="home.css">
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <title>Home</title>
+        <script th:inline="javascript">
+            const folders = /*[[${folders}]]*/ 'Default message';
+        </script>
+        <script>
+            function handlefile(event){
+                event.preventDefault()
+                const selectfile = event.target.files[0];
+                if (selectfile){
+                    document.getElementById('inputhi1').value = selectfile.name;
+                    let size = selectfile.size
+                    const div = document.getElementById('inputhi2')
+                    if(size < 1024)
+                    div.value = parseInt(size)+' bytes'
+                    else{
+                        size = (size/1024).toFixed(2)
+                        if(size < 1024)
+                        div.value = parseFloat(size)+' KB'
+                        else{
+                            size = (size/1024).toFixed(2)
+                            if(size < 1024)
+                            div.value = parseFloat(size)+' MB'
+                        }
+                    }
+                }
+            }
+
+            function uploadfile(event){
+                event.preventDefault();
+                const file = document.getElementById('inputhi3').files[0];
+                var path = document.getElementById("inputhi4").value;
+                if(folders.indexOf(path)<0){
+                    alert("Path is invalid. Please provide a valid path");
+                    return;
+                }
+                filepath = path.split('\\').pop();
+                if(filepath !== "S:")
+                filepath = filepath.slice(2);
+                const reader = new FileReader()
+                reader.onload = event => {
+                    const codes = event.target.result;
+                    fetch("/api/sendCode", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ file: { name: String(file.name), parentfolder: filepath, type: "file"}, content: {code: codes, language: "C"}}),
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if(data === 'Success'){
+                            alert("File uploaded successfully")
+                            window.location.href = "/home";
+                        }
+                        else{
+                            alert("Failed to upload")
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+                reader.onerror = error => alert("Please select a valid file");
+                if(file){   
+                    reader.readAsText(file);
+                }
+            }
+
+            function change(event){
+                event.preventDefault();
+                var d = document.getElementById("selectforf");
+                var input1 = document.getElementsByName("forf")[0];
+                var input2 = document.getElementsByName("forf2")[0];
+                if(d.value === "folder"){
+                    input1.placeholder = "Folder Name";
+                    input2.placeholder = "Folder Path";
+                }
+                else if(d.value === "file"){
+                    input1.placeholder = "File Name";
+                    input2.placeholder = "File Path";
+                }
+            }
+
+            function createfile(event){
+                event.preventDefault();
+                var type = document.getElementById('selectforf').value;
+                var name = document.getElementById("inputhi7").value;
+                var path = document.getElementById("inputhi8").value;
+                if(folders.indexOf(path)<0){
+                    alert("Path is invalid. Please provide a valid path");
+                    return;
+                }
+                if(name.trim().length == 0){
+                    alert("Please provide a valid name");
+                    return;
+                }
+                filepath = path.split('\\').pop();
+                if(filepath !== "S:")
+                filepath = filepath.slice(2);
+                // console.log(filepath)
+                if(type == 'folder'){
+                    fetch("/api/sendFolder", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ name: String(name), parentfolder: filepath, type: "folder" }),
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if(data === 'Success'){
+                            alert("Folder created successfully")
+                            window.location.href = "/home";
+                        }
+                        else{
+                            alert("Failed to create")
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+                else if(type == 'file'){
+                    fetch("/api/sendCode", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ file: { name: String(name), parentfolder: filepath, type: "file"}, content: { language: "C"}}),
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if(data === 'Success'){
+                            alert("File created successfully")
+                            window.location.href = "/home";
+                        }
+                        else{
+                            alert("Failed to create")
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            }
+
+            function fileopen(event, id){
+                event.preventDefault();
+                fetch("/api/enterFile", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: String(id),
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if(data === 'Success'){
+                            window.location.href = "/editor";
+                        }
+                        else{
+                            alert("Failed to open folder")
+                        }
+                    })
+                .catch(error => console.error('Error:', error));
+            }
+
+            function folderopen(event, name){
+                event.preventDefault();
+                fetch("/api/enterFolder", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: String(name),
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if(data === 'Success'){
+                            window.location.href = "/home";
+                        }
+                        else{
+                            alert("Failed to open folder")
+                        }
+                    })
+                .catch(error => console.error('Error:', error));
+            }
+
+            function createGroup(event){
+                var gname = document.getElementById("inputhi9").value;
+                var gdesc = document.getElementById("gdesc").value;
+                fetch("/api/groupInfo", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({name: gname, gdesc: gdesc})
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if(data === 'Success'){
+                            alert("Group created successfully")
+                            window.location.href = "/home";
+                        }
+                        else{
+                            alert("Failed to create group")
+                        }
+                    })
+                .catch(error => console.error('Error:', error));
+            }
+
+            function selectgroup(event, name, gid){
+                fetch('/api/setGroup', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({gid: gid, name: name})
+                })
+                .then(response => response.text())
+                    .then(data => {
+                        if(data === 'Success'){
+                            window.location.href = "/discussion";
+                        }
+                        else{
+                            alert("Failed to open group")
+                        }
+                    })
+                .catch(error => console.error('Error:', error));
+            }
+
+        </script>
+    </head>
+    <body>
+        <div id="menubar">
+            <div id="title">CodeTalk</div>
+            <button id="logout" onclick="{window.location.href = '/logout'}">Logout</button>
+            <button id="profile" onclick="window.location.href = '/profile'">My Profile</button>
+        </div>
+        <div id="sidebar">
+            <img src="./front.jpeg" id="img1">
+            <!-- <div th:text="${userid}" class="sidenames"></div> -->
+            <div th:text="${username}" class="sidenames"></div>
+            <div th:text="${email}" class="sidenames"></div>
+        </div>
+        <div id="codetitle">CodeFiles</div>
+        <div id="codefiles">
+            <button id="create" data-toggle="modal" data-target="#createModal">Create</button>
+            <button id="upload" data-toggle="modal" data-target="#uploadModal">Upload</button>
+            <button id="create" onclick="folderopen(event, 'S:')">Go to home</button>
+            <button id="upload" th:disabled="${folderpath == 'S:'}" onclick="folderopen(event, 'previousfolder!!!!')">Go to previous folder</button>
+            <div id="filenames">
+                <div th:if="${forf == 'empty'}">
+                    <p>No files or folders found.</p>
+                </div>
+                <div th:if="${forf != 'empty'}">
+                    <div th:each="file : ${forf}">
+                        <div th:if="${file.type == 'folder' && file.parentfolder == folderpath}" id="file" th:foldername="${file.name}" onclick="folderopen(event, this.getAttribute('foldername'));">
+                            <img src="folder.png" class="document">
+                            <p th:text="${file.name}" id="p"></p>
+                        </div>
+                    </div>
+                    <div th:each="file : ${forf}">
+                        <div th:if="${file.type == 'file' && file.parentfolder == folderpath}" id="file" th:fid="${file.id}" onclick="fileopen(event, this.getAttribute('fid'));">
+                            <img src="document.png" class="document">
+                            <p th:text="${file.name}" id="p"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <div class="modal-title" id="exampleModalLongTitle">Click on Select to select the file</div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                    <input class="inputh2" id="inputhi1" disabled placeholder="File Name"/>
+                    <input class="inputh2" id="inputhi2" disabled placeholder="File Size"/>
+                    <input id="inputhi4" class="inputh2" placeholder="File Path" required autocomplete="off" onfocus="showSuggestions2()">
+                    <div class="select-options" id="selectOptions2">
+                        <div th:each="folder : ${folders}">
+                            <div class="option" th:data-value="${folder}" th:text="${folder}"></div>
+                        </div>
+                    </div>
+                    <label for="inputhi3" id="labelhi1">Select</label>
+                    <input type="file" id="inputhi3" onchange="handlefile(event)" style="display: none" accept=".py, .c"/>
+                </div>
+                <div class="modal-footer">
+                <button type="button" id="buttonhi4" onclick="uploadfile(event)">Upload to Server</button>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <div class="modal-title">Write the name of the new 
+                    <select id="selectforf" onchange="change(event)">
+                        <option value="file">file</option>
+                        <option value="folder">folder</option>
+                    </select>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                    <input id="inputhi7" class="inputh2" name="forf" placeholder="File Name" autocomplete="off" required></input>
+                    <input id="inputhi8" class="inputh2" name="forf2" placeholder="File Path" required autocomplete="off" onfocus="showSuggestions1()">
+                    <div class="select-options" id="selectOptions1">
+                        <div th:each="folder : ${folders}">
+                            <div class="option" th:data-value="${folder}" th:text="${folder}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                <button type="button" id="buttonhi4" onclick="createfile(event)">Create</button>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div>
+            <div id="dtitle" onclick="selectgroup(event, null, 0)">Discussions</div>
+            <div id="groups">
+                <button id="markread" disabled>Mark all as read</button>
+                <button id="creategroup" data-toggle="modal" data-target="#groupModal">Create a new group</button>
+                <div id="discussions">
+                    <div th:if="${groups == 'empty'}">
+                        No groups to show. <br>
+                        Create a new group for group to show here or ask your friend to add you to his group
+                    </div>
+                    <div class="group-list" th:if="${groups != 'empty'}" th:each="groupwrap : ${groups}">
+                        <div class="group-list-item" th:data-group-name="${groupwrap.group.name}" th:gid="${groupwrap.group.gid}" onclick="selectgroup(event, this.getAttribute('data-group-name'), this.getAttribute('gid'));">
+                            <div class="name" th:text="${groupwrap.group.name}"></div>
+                            <div class="unread" th:if="${groupwrap.notification == 0}" style="visibility: hidden;" th:text="${groupwrap.notification}"></div>
+                            <div class="unread" th:if="${groupwrap.notification != 0}" th:text="${groupwrap.notification}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="groupModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <div class="modal-title" id="groupModalTitle">Create a new group</div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input id="inputhi9" class="inputh2" name="forf" placeholder="Group Name" autocomplete="off" required></input>
+                        <textarea id="gdesc" class="inputh2" name="forf2" placeholder="Description" required autocomplete="off"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="buttonhi4" onclick="createGroup(event)">Create</button>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            const searchInput1 = document.getElementById('inputhi8');
+            const searchInput2 = document.getElementById('inputhi4');
+            const selectOptions1 = document.getElementById('selectOptions1');
+            const selectOptions2 = document.getElementById('selectOptions2');
+            const options1 = selectOptions1.querySelectorAll('.option');
+            const options2 = selectOptions2.querySelectorAll('.option');
+            let isInputFocused1 = false;
+            let isInputFocused2 = false;
+        
+            function showSuggestions1() {
+                isInputFocused1 = true;
+                selectOptions1.style.display = 'block';
+            }
+
+            function showSuggestions2() {
+                isInputFocused2 = true;
+                selectOptions2.style.display = 'block';
+            }
+        
+            function hideSuggestions1() {
+                if (!isInputFocused1) {
+                    selectOptions1.style.display = 'none';
+                }
+            }
+
+            function hideSuggestions2() {
+                if (!isInputFocused2) {
+                    selectOptions2.style.display = 'none';
+                }
+            }
+        
+            searchInput1.addEventListener('input', function() {
+                const searchText = this.value.toLowerCase();
+                options1.forEach(option => {
+                    const optionText = option.dataset.value.toLowerCase();
+                    if (optionText.includes(searchText)) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+                selectOptions1.style.display = 'block';
+            });
+
+            searchInput2.addEventListener('input', function() {
+                const searchText = this.value.toLowerCase();
+                options2.forEach(option => {
+                    const optionText = option.dataset.value.toLowerCase();
+                    if (optionText.includes(searchText)) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+                selectOptions2.style.display = 'block';
+            });
+        
+            options1.forEach(option => {
+                option.addEventListener('mousedown', function() {
+                    searchInput1.value = option.dataset.value;
+                    isInputFocused1 = false;
+                    selectOptions1.style.display = 'none';
+                });
+            });
+
+            options2.forEach(option => {
+                option.addEventListener('mousedown', function() {
+                    searchInput2.value = option.dataset.value;
+                    isInputFocused2 = false;
+                    selectOptions2.style.display = 'none';
+                });
+            });
+        
+            document.addEventListener('mousedown', function(event) {
+                if (!selectOptions1.contains(event.target) && !searchInput1.contains(event.target)) {
+                    isInputFocused1 = false;
+                    hideSuggestions1();
+                }
+                if (!selectOptions2.contains(event.target) && !searchInput2.contains(event.target)) {
+                    isInputFocused2 = false;
+                    hideSuggestions2();
+                }
+            });
+        </script>
+    </body>
+</html>

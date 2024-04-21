@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="login.css">
+    </head>
+    <title>Sign in</title>
+    <script>
+        function checkUserInfo(event){
+            event.preventDefault();
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            fetch("/api/authenticateInfo", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username: username, password: password }),
+            })
+            .then(response => response.text())
+            .then(data => {
+                if(data === 'Success'){
+                    alert("User logged in successfully");
+                    window.location.href = "/home";
+                }
+                else if(data === 'Fail'){
+                    alert("Incorrect Username or Password. Please try again")
+                    // window.location.href = "/login";
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+    <body>
+        <div id="login">
+            <p id="name">CodeTalk</p>
+            <form onsubmit="checkUserInfo(event)">
+                <input id="username" placeholder="Username or Email" required autocomplete="off">
+                <input id="password" type="password" placeholder="Password" required autocomplete="off"/>
+                <button id="signin" onclick="">Sign in</button>
+            </form>
+            <p id="tosignup"><a href="signup">New user? Sign up</a></p>
+        </div>
+    </body>
+</html>

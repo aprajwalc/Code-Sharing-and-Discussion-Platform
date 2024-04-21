@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="editor-readonly.css">
+	<title>Editor</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+	<script th:inline="javascript">
+		var code = /*[[${code}]]*/ 'Default message';
+		var cfid = /*[[${cfid}]]*/ '0'
+        var folders = /*[[${folders}]]*/ null;
+		console.log(cfid)
+	</script>
+	<script>
+		require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@0.45.0/min/vs' } });
+		require(['vs/editor/editor.main'], function () {
+			var editor = monaco.editor.create(document.getElementById('container'), {
+				value: code,
+				language: 'cpp',
+				theme: 'vs-dark',
+				autoIndent: 'full',
+				contextmenu: true,
+				fontSize: 15,
+				lineHeight: 24,
+				hideCursorInOverviewRuler: true,
+				matchBrackets: 'always',
+				minimap: {
+					enabled: true,
+				},
+				scrollbar: {
+					horizontalSliderSize: 4,
+					verticalSliderSize: 18,
+				},
+				selectOnLineNumbers: true,
+				roundedSelection: false,
+				readOnly: true,
+				cursorStyle: 'line',
+				automaticLayout: true,
+			});
+		});
+
+        function createfile(event){
+            event.preventDefault();
+            var name = document.getElementById("inputhi1").value;
+            var path = document.getElementById("inputhi2").value;
+            if(folders.indexOf(path)<0){
+                alert("Path is invalid. Please provide a valid path");
+                return;
+            }
+            if(name.trim().length == 0){
+                alert("Please provide a valid name");
+                return;
+            }
+            filepath = path.split('\\').pop();
+            if(filepath !== "S:")
+            filepath = filepath.slice(2);
+            fetch("/api/sendEditorCode", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ file: { name: String(name), parentfolder: filepath, type: "file"}, content: { code: code, language: "C"}}),
+            })
+            .then(response => response.text())
+            .then(data => {
+                if(data === 'Success'){
+                    alert("File created successfully")
+                    window.location.href = "/editor";
+                }
+                else{
+                    alert("Failed to create")
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+	</script>
+</head>
+<body>
+	<div id="menubar">
+		<button class="menubutton" onclick="{window.location.href='/home'}"><img class="menuimage" src="./home.png" draggable="false"/></button>
+		<button class="menubutton"><img class="menuimage" src="./chat.png" draggable="false"/></button>
+		<button class="menubutton"><img class="menuimage" src="./split.png" draggable="false"/></button>
+		<div id="codetitle" th:text="${name + ' (read-only)'}"></div>
+		<button class="menubutton" id="save" data-toggle="modal" data-target="#saveCopyModal">Save as copy</button>
+		<img src="./front.jpeg" id="userprofile"/>
+	</div>
+    <div class="modal fade" id="saveCopyModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <div class="modal-title" id="exampleModalLongTitle">Create a copy of the file</div>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+                <input class="inputh2" id="inputhi1" placeholder="File Name" th:value="${name}"/>
+                <input class="inputh2" id="inputhi2" placeholder="File Path" required autocomplete="off" onfocus="showSuggestions2()">
+                <div class="select-options" id="selectOptions2">
+                    <div class="option" th:each="folder : ${folders}" th:data-value="${folder}" th:text="${folder}"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" id="buttonhi4" onclick="createfile(event)">Create file</button>
+            </div>
+        </div>
+        </div>
+    </div>
+	<div id="container"></div>
+	<script>
+        const searchInput2 = document.getElementById('inputhi2');
+        const selectOptions2 = document.getElementById('selectOptions2');
+        const options2 = selectOptions2.querySelectorAll('.option');
+        let isInputFocused2 = false;
+
+        function showSuggestions2() {
+            isInputFocused2 = true;
+            selectOptions2.style.display = 'block';
+        }
+
+        function hideSuggestions2() {
+            if (!isInputFocused2) {
+                selectOptions2.style.display = 'none';
+            }
+        }
+
+        searchInput2.addEventListener('input', function() {
+            const searchText = this.value.toLowerCase();
+            options2.forEach(option => {
+                const optionText = option.dataset.value.toLowerCase();
+                if (optionText.includes(searchText)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            selectOptions2.style.display = 'block';
+        });
+        
+        options2.forEach(option => {
+            option.addEventListener('mousedown', function() {
+                searchInput2.value = option.dataset.value;
+                isInputFocused2 = false;
+                selectOptions2.style.display = 'none';
+            });
+        });
+    
+        document.addEventListener('mousedown', function(event) {
+            if (!selectOptions2.contains(event.target) && !searchInput2.contains(event.target)) {
+                isInputFocused2 = false;
+                hideSuggestions2();
+            }
+        });
+	</script>
+</body>
+</html>

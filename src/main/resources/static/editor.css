@@ -1,0 +1,167 @@
+body{
+    background-color: black;
+    color: white;
+}
+
+#menubar{
+    position: fixed;
+    top: 0%;
+    left: 0%;
+    width: calc(100%);
+    background-color: #202c37;
+    border: 2px solid #202c37;
+    /* border-radius: 5px; */
+    height: 9%;
+}
+
+.menubutton{
+    position: relative;
+    height: 100%;
+    /* width: 5%; */
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    background-color: white;
+    color: black;
+    border: 2px solid #202c37;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.menubutton:hover{
+    transition: 0.5s;
+    /* border-color: #202c37; */
+    filter: invert(100%);
+}
+
+#container{
+    background-color: black;
+    position: fixed;
+    top: 12%;
+    left: 18%;
+    width: 80%;
+    height: 85%;
+    border: 2px solid black;
+    border-radius: 5px;
+}
+
+#codeinfo{
+    position: relative;
+    font-size: 25px;
+    text-align: center;
+}
+
+#codefiles{
+    position: fixed;
+    width: 15%;
+    left: 0%;
+    color: black;
+    background-color: #202c37;
+    border: 2px solid #202c37;
+    border-radius: 5px;
+    overflow-x: auto;
+    height: 90%;
+    top: 9.2%;
+}
+
+.menuimage{
+    position: relative;
+    height: 100%;
+}
+
+.folder-name {
+    cursor: pointer;
+    color: white;
+    font-size: 25px;
+    background-color: #202c37;
+    padding-left: 20px;
+    padding: 8px 12px;
+    border: 2px solid #202c37;
+    border-radius: 5px;
+}
+
+.folder-name:hover {
+    filter: invert(100%);
+    transition: 1s;
+}
+
+.file {
+    padding-left: 40px;
+    font-size: 25px;
+    color: white;
+    background-color: #202c37;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.file:hover{
+    filter: invert(100%);
+    transition: 1s;
+}
+
+.folder-content {
+    display: none;
+    margin-left: 20px;
+}
+
+#codetitle{
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    left: 25%;
+    font-size: 50px;
+    width: 50%;
+    height: 100%;
+    text-align: center;
+}
+
+#p{
+    display: inline-block;
+    position: relative;
+    margin: 0px;
+    margin-left: 20px;
+    /* padding-bottom: 10px; */
+}
+
+.document{
+    display: inline-block;
+    position: relative;
+    padding-top: 10px;
+    height: 25px;
+    filter: invert(100%);
+}
+
+#save{
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    right: 8%;
+    width: 7%;
+    padding: 1px;
+    font-size: 20px;
+    font-family: cursive;
+    height: 100%;
+    word-wrap: break-word;
+}
+
+#rename{
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    right: 16%;
+    width: 7%;
+    padding: 1px;
+    font-size: 20px;
+    font-family: cursive;
+    height: 100%;
+    word-wrap: break-word;
+}
+
+#userprofile{
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    right: 1%;
+    height: 95%;
+    border: 2px solid #202c37;
+    border-radius: 50%;
+}

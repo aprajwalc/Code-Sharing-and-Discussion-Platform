@@ -1,0 +1,80 @@
+body{
+    background-color: #202c37;
+    /* background-color: #444a54; */
+    font-family: 'Times New Roman', Times, serif;
+}
+
+#login{
+    position: absolute;
+    top: 10%;
+    left: 25%;
+    width: 50%;
+    height: 76%;
+    background-color: #bed7dc;
+
+}
+
+#name{
+    position: relative;
+    font-family: cursive;
+    font-size: 40px;
+    top: -3%;
+    left: 40%;
+}
+
+#username{
+    position: absolute;
+    top: 25%;
+    left: 10%;
+    width: 79%;
+    font-family: cursive;
+    height: 7%;
+    border: none;
+    background-color: #bed7dc;
+    outline: none;
+    border-bottom: 2px solid black;
+    font-size: 25px;
+    padding-left: 1%;
+}
+
+#password{
+    position: absolute;
+    top: 47%;
+    left: 10%;
+    width: 79%;
+    background-color: #bed7dc;
+    font-family: cursive;
+    height: 7%;
+    border: none;
+    outline: none;
+    border-bottom: 2px solid black;
+    font-size: 25px;
+    padding-left: 1%;
+}
+
+#signin{
+    position: absolute;
+    top: 70%;
+    left: 10%;
+    width: 80%;
+    height: 10%;
+    border: 2px solid #202c37;
+    border-radius: 5px;
+    font-family: cursive;
+    font-size: 25px;
+    color: #bed7dc;
+    background-color: #202c37;
+}
+
+#signin:hover{
+    background-color: black;
+    color: white;
+    transition: 1s;
+}
+
+#tosignup{
+    position: absolute;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    top: 90%;
+    left: 70%;
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="profile.css">
+    <title>Profile</title>
+</head>
+<body>
+    <div id="menubar">
+        <div id="title">CodeTalk</div>
+        <button id="logout" onclick="window.location.href = '/logout'">Logout</button>
+    </div>
+    <div id="sidebar">
+        <div class="sidele" onclick="window.location.href = '/home'">Home</div>
+        <div class="sidele" onclick="window.location.href = '/discussion'">Discussions</div>
+    </div>
+    <div id="profile">
+        <p id="ptitle" style="font-size: 50px; position: relative; margin-bottom: 10px; margin-top: 10px; width: 100%; text-align: center;">Profile</p>
+        <img src="front.jpeg" id="userimage"/>
+        <div id="user">
+            <div class="userinfo">Username: <br/><input class="input" disabled th:value="${username}"/></div>
+            <div class="userinfo">Password: <br/><input class="input" type="password" value="somerandompassword" disabled/></div>
+            <div class="userinfo">Joined date: <br/><input class="input" type="date" disabled th:value="${date}" /></div>
+        </div>
+    </div>
+</body>
+</html>

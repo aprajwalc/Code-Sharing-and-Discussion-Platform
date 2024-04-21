@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="editor.css">
+	<title>Editor</title>
+	<script th:inline="javascript">
+		var code = /*[[${code}]]*/ 'Default message';
+		var cfid = /*[[${cfid}]]*/
+		console.log(cfid)
+	</script>
+	<script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
+	<script>
+		require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@0.45.0/min/vs' } });
+		require(['vs/editor/editor.main'], function () {
+			window.editor = monaco.editor.create(document.getElementById('container'), {
+				value: code,
+				language: 'cpp',
+				theme: 'vs-dark',
+				autoIndent: 'full',
+				contextmenu: true,
+				fontSize: 15,
+				lineHeight: 24,
+				hideCursorInOverviewRuler: true,
+				matchBrackets: 'always',
+				minimap: {
+					enabled: true,
+				},
+				scrollbar: {
+					horizontalSliderSize: 4,
+					verticalSliderSize: 18,
+				},
+				selectOnLineNumbers: true,
+				roundedSelection: false,
+				readOnly: false,
+				cursorStyle: 'line',
+				automaticLayout: true,
+			});
+		});
+
+		function savecodefile(event){
+			event.preventDefault();
+			var codevalue = window.editor.getValue();
+			console.log(codevalue, cfid);
+			fetch("/api/saveCode", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({id : String(cfid), code: String(codevalue)})
+				})
+				.then(response => response.text())
+				.then(data => {
+					if(data === 'Success'){
+						alert("Saved successfully")
+					}
+					else{
+						alert("Failed to save")
+					}
+				})
+			.catch(error => console.error('Error:', error));
+		}
+
+		function fileopen(event, fid){
+			event.preventDefault();
+			if(fid != cfid){
+				console.log(fid)
+				fetch("/api/enterFile", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: String(fid),
+					})
+					.then(response => response.text())
+					.then(data => {
+						if(data === 'Success'){
+							window.location.href = "/editor";
+						}
+						else{
+							alert("Failed to open folder")
+						}
+					})
+				.catch(error => console.error('Error:', error));
+			}
+		}
+
+		function deletefile(event){
+			event.preventDefault();
+			var k = 0;
+			k = window.confirm("Do you want to delete the current file?")
+			if(k){
+				fetch("/api/deleteFile", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: Number(cfid),
+					})
+					.then(response => response.text())
+					.then(data => {
+						if(data === 'Success'){
+							alert("File deleted successfully")
+							window.location.href = "/home";
+						}
+						else{
+							alert("Failed to delete file")
+						}
+					})
+				.catch(error => console.error('Error:', error));
+			}
+		}
+	</script>
+</head>
+<body>
+	<div id="menubar">
+		<button class="menubutton" onclick="{window.location.href='/home'}"><img class="menuimage" src="home.png" draggable="false"/></button>
+		<button class="menubutton"><img class="menuimage" src="chat.png" draggable="false"/></button>
+		<button class="menubutton"><img class="menuimage" src="split.png" draggable="false"/></button>
+		<div id="codetitle" th:text="${name}"></div>
+		<!-- <span id="codeinfo"></span> -->
+		<button class="menubutton" id="rename" onclick="deletefile(event)">Delete file</button>
+		<button class="menubutton" id="save" onclick="savecodefile(event)">Save file</button>
+		<img src="front.jpeg" id="userprofile"/>
+	</div>
+	<div id="codefiles">
+		<div class="folder" th:each="folder : ${files}" th:if="${folder.type == 'folder' && folder.parentfolder == folderpath}">
+			<div class="folder-name">
+				<img src="folder.png" class="document">
+                <p th:text="${folder.name}" id="p"></p>
+			</div>
+			<div class="folder-content">
+				<div th:each="file : ${copy}" th:if="${file.type == 'folder' && folder.name == file.parentfolder}" class="file">
+					<img src="folder.png" class="document">
+					<p th:text="${file.name}" id="p"></p>
+				</div>
+				<div th:each="file : ${copy}" th:if="${file.type == 'file' && folder.name == file.parentfolder}" class="file" th:fid="${file.id}" onclick="fileopen(event, this.getAttribute('fid'));">
+					<img src="document.png" class="document">
+					<p th:text="${file.name}" id="p"></p>
+				</div>
+			</div>
+		</div>
+		<div th:each="file : ${files}" th:if="${file.type == 'file' && file.parentfolder == folderpath}" th:fid="${file.id}" onclick="fileopen(event, this.getAttribute('fid'));">
+			<div class="file" th:fid="${file.id}">
+				<img src="document.png" class="document">
+				<p th:text="${file.name}" id="p"></p>
+			</div>
+		</div>
+	</div>
+	<div id="container"></div>
+	<script>
+		document.querySelectorAll('.folder').forEach(folder => {
+			const folderName = folder.querySelector('.folder-name');
+			const folderContent = folder.querySelector('.folder-content');
+	
+			folderName.addEventListener('click', () => {
+				if (folderContent) {
+					folderContent.style.display = folderContent.style.display === 'none' ? 'block' : 'none';
+				}
+			});
+		});
+	</script>
+</body>
+</html>

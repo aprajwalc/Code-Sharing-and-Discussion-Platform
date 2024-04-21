@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Form</title>
+</head>
+<body>
+    <form id="myForm">
+        <label for="inputText">Enter Text:</label>
+        <input type="text" id="inputText" name="inputText" required>
+
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+    <script>
+        function submitForm() {
+            var inputValue = document.getElementById("inputText").value;
+            // Send the input value to the backend
+            fetch("/api/processInput", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ inputText: inputValue }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Backend Response:", data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+</body>
+</html>

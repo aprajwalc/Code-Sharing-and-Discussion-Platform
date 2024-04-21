@@ -1,0 +1,118 @@
+body{
+    background-color: #c7dfb8;
+}
+
+#menubar{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: calc(100% - 2px);
+    height: calc(10% - 4px);
+    background-color: #202c37;
+    border: 2px solid #202c37;
+    color: #bed7dc;
+    /* border-radius: 8px; */
+}
+
+#sidebar{
+    position: fixed;
+    top: calc(10% - 4px);
+    left: 0px;
+    width: calc(15% - 4px);
+    height: calc(91% - 7px);
+    background-color: #202c37;
+    border: 2px solid #202c37;
+    /* border-radius: 8px; */
+    padding-top: 50px;
+    text-align: center;
+    font-size: 30px;
+}
+
+#title{
+    position: relative;
+    font-size: 40px;
+    font-family: cursive;
+    height: 8%;
+    left: 1.5%;
+}
+
+#logout{
+    position: fixed;
+    left: 87%;
+    width: 10%;
+    height: 50px;
+    border: 2px solid black;
+    border-radius: 5px;
+    font-family:'Times New Roman', Times, serif;
+    font-size: 30px;
+    background-color: #f2d2a9;
+    color: black;
+    padding: 1px;
+    margin-top: 3px;
+}
+
+#logout:hover{
+    background-color: black;
+    color: #cddfff;
+    transition: 1s;
+}
+
+.sidele{
+    padding: 2%;
+    padding-top: 10%;
+    height: 8%;
+    background-color: #202c37;
+    color: #bed7dc;
+}
+
+.sidele:hover{
+    filter: invert(100%);
+    transition: 1s;
+}
+
+#profile{
+    position: fixed;
+    width: 85%;
+    left: 15%;
+    height: 90%;
+    top: 10%;
+}
+
+#userimage{
+    position: relative;
+    left: 5%;
+    margin-top: 30px;
+    border-radius: 5px;
+    width: 30.9%;
+    height: 60%;
+}
+
+#user{
+    position: absolute;
+    top: 10%;
+    left: 45%;
+    width: 50%;
+    height: 60%;
+}
+
+.userinfo{
+    position: relative;
+    font-size: 25px;
+    padding-top: 7%;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    position: relative;
+}
+
+.input{
+    width: 90%;
+    height: 10%;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid black;
+    outline: none;
+    font-size: 25px;
+    padding-top: 5%;
+    font-family: cursive;
+    position: relative;
+    margin-bottom: 3%;
+}

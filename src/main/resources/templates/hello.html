@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello Page</title>
+    <script>
+        function myFunction() {
+        const para = document.createElement("p");
+        const node = document.createTextNode("Hello");
+        para.appendChild(node);
+        document.getElementById("new").appendChild(para);
+        }
+    </script>
+</head>
+<body>
+    <p>Click "Append" create a paragraph and append it to myDIV:</p>
+    <button onclick="myFunction()">Append</button>
+    <div id="new"></div>
+    <h1 th:text="${message}"></h1>
+</body>
+</html>
