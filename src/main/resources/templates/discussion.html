@@ -23,7 +23,7 @@
     <script>
         var oldgid = 0;
         var usermapping;
-        var socket = new SockJS('http://10.5.26.6:8080/ws');
+        var socket = new SockJS('http://10.20.201.2:8080/ws');
         var stompClient = Stomp.over(socket);
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -262,7 +262,7 @@
                 .then(response => response.text())
                 .then(data => {
                     if(data === 'Success'){
-                        // window.location.href = "/editor";
+                        window.location.href = "/editor";
                     }
                     else if(data === 'Notpresent'){
                         alert("The file has been deleted")

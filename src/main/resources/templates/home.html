@@ -68,7 +68,7 @@
                     .catch(error => console.error('Error:', error));
                 }
                 reader.onerror = error => alert("Please select a valid file");
-                if(file){   
+                if(file){
                     reader.readAsText(file);
                 }
             }
